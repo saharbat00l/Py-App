@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request, redirect
 import os
 import json
 
@@ -7,34 +7,35 @@ TASKS_FILE = "tasks.json"
 
 def load_tasks():
     if os.path.exists(TASKS_FILE):
-        with open(TASKS_FILE, "r") as f:
-            return json.load(f)
+        with open(TASKS_FILE, "r") as file:
+            return json.load(file)
     return []
 
 def save_tasks(tasks):
-    with open(TASKS_FILE, "w") as f:
-        json.dump(tasks, f)
+    with open(TASKS_FILE, "w") as file:
+        json.dump(tasks, file)
 
-@app.route('/tasks', methods=['GET'])
-def get_tasks():
-    return jsonify(load_tasks())
-
-@app.route('/tasks', methods=['POST'])
-def add_task():
-    data = request.get_json()
+@app.route("/")
+def index():
     tasks = load_tasks()
-    tasks.append({"task": data.get("task", ""), "done": False})
-    save_tasks(tasks)
-    return jsonify({"message": "Task added."}), 201
+    return render_template("index.html", tasks=tasks)
 
-@app.route('/tasks/<int:index>/done', methods=['POST'])
-def mark_done(index):
+@app.route("/add", methods=["POST"])
+def add():
+    task = request.form["task"]
+    if task:
+        tasks = load_tasks()
+        tasks.append({"task": task, "done": False})
+        save_tasks(tasks)
+    return redirect("/")
+
+@app.route("/done/<int:index>")
+def done(index):
     tasks = load_tasks()
     if 0 <= index < len(tasks):
         tasks[index]["done"] = True
         save_tasks(tasks)
-        return jsonify({"message": f"Task {index + 1} marked as done."})
-    return jsonify({"error": "Invalid task index"}), 404
+    return redirect("/")
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000)

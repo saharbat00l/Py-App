@@ -15,6 +15,12 @@ def save_tasks(tasks):
     with open(TASKS_FILE, "w") as file:
         json.dump(tasks, file)
 
+tasks = [
+    "Write unit tests",
+    "Fix template rendering issue",
+    "Deploy with Jenkins",
+]
+
 @app.route("/")
 def index():
     tasks = load_tasks()

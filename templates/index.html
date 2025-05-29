@@ -20,7 +20,9 @@
     </form>
 
     <ul>
-        {% for i, task in enumerate(tasks) %}
+{% for task in tasks %}
+    {{ loop.index0 }} - {{ task }}
+{% endfor %}
             <li class="{{ 'done' if task.done }}">
                 {{ i+1 }}. {{ task.task }}
                 {% if not task.done %}

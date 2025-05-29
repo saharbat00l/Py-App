@@ -1,69 +1,40 @@
+from flask import Flask, request, jsonify
 import os
 import json
 
+app = Flask(__name__)
 TASKS_FILE = "tasks.json"
 
 def load_tasks():
     if os.path.exists(TASKS_FILE):
-        with open(TASKS_FILE, "r") as file:
-            return json.load(file)
+        with open(TASKS_FILE, "r") as f:
+            return json.load(f)
     return []
 
 def save_tasks(tasks):
-    with open(TASKS_FILE, "w") as file:
-        json.dump(tasks, file)
+    with open(TASKS_FILE, "w") as f:
+        json.dump(tasks, f)
 
-def add_task(task):
+@app.route('/tasks', methods=['GET'])
+def get_tasks():
+    return jsonify(load_tasks())
+
+@app.route('/tasks', methods=['POST'])
+def add_task():
+    data = request.get_json()
     tasks = load_tasks()
-    tasks.append({"task": task, "done": False})
+    tasks.append({"task": data.get("task", ""), "done": False})
     save_tasks(tasks)
-    print(f"Added task: {task}")
+    return jsonify({"message": "Task added."}), 201
 
-def list_tasks():
-    tasks = load_tasks()
-    if not tasks:
-        print("No tasks found.")
-        return
-    print("\nYour Tasks:")
-    for i, t in enumerate(tasks, 1):
-        status = "✔️" if t["done"] else "❌"
-        print(f"{i}. [{status}] {t['task']}")
-
+@app.route('/tasks/<int:index>/done', methods=['POST'])
 def mark_done(index):
     tasks = load_tasks()
     if 0 <= index < len(tasks):
         tasks[index]["done"] = True
         save_tasks(tasks)
-        print(f"Marked task {index + 1} as done.")
-    else:
-        print("Invalid task number.")
+        return jsonify({"message": f"Task {index + 1} marked as done."})
+    return jsonify({"error": "Invalid task index"}), 404
 
-def main():
-    while True:
-        print("\nTo-Do List Manager")
-        print("1. Add Task")
-        print("2. List Tasks")
-        print("3. Mark Task as Done")
-        print("4. Exit")
-        choice = input("Enter your choice: ")
-
-        if choice == "1":
-            task = input("Enter new task: ")
-            add_task(task)
-        elif choice == "2":
-            list_tasks()
-        elif choice == "3":
-            list_tasks()
-            try:
-                index = int(input("Enter task number to mark as done: ")) - 1
-                mark_done(index)
-            except ValueError:
-                print("Please enter a valid number.")
-        elif choice == "4":
-            print("Goodbye!")
-            break
-        else:
-            print("Invalid choice, please try again.")
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)

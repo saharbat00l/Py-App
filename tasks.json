@@ -1,0 +1,5 @@
+[
+  {"task": "Learn Flask", "done": false},
+  {"task": "Push app to Jenkins", "done": true},
+  {"task": "Add frontend UI", "done": false}
+]
